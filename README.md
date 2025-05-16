@@ -43,10 +43,10 @@ GreeumMCP can be run directly from the command line:
 
 ```bash
 # Using stdio transport (default)
-greeummcp --data-dir ./data --transport stdio
+greeum_mcp --data-dir ./data --transport stdio
 
 # Using HTTP transport
-greeummcp --data-dir ./data --transport http --port 8000
+greeum_mcp --data-dir ./data --transport http --port 8000
 ```
 
 ### Using as a Python Library
@@ -60,7 +60,7 @@ run_server()
 # Run with custom settings
 run_server(
     data_dir="./data",
-    server_name="greeum",
+    server_name="greeum_mcp",
     port=8000,
     transport="http",
     greeum_config={
@@ -101,7 +101,7 @@ You can also manually configure Claude Desktop to use GreeumMCP by creating a JS
 ```json
 {
     "mcpServers": {
-        "greeum-mcp": {
+        "greeum_mcp": {
             "command": "python",
             "args": [
                 "-m", "greeummcp.server",
@@ -117,7 +117,7 @@ You can also manually configure Claude Desktop to use GreeumMCP by creating a JS
 ```json
 {
     "mcpServers": {
-        "greeum-mcp": {
+        "greeum_mcp": {
             "command": "python3",
             "args": [
                 "-m", "greeummcp.server",
@@ -132,6 +132,24 @@ You can also manually configure Claude Desktop to use GreeumMCP by creating a JS
 3. Make sure to replace `USERNAME` and adjust paths according to your system.
 4. Restart Claude Desktop to apply the changes.
 5. Verify that the tools are available by looking for the hammer icon in the Claude Desktop interface.
+
+### Cursor Integration
+
+To use GreeumMCP with Cursor, create a `.cursor/mcp.json` file in your project root:
+
+```json
+{
+  "greeum_mcp": {
+    "command": "python",
+    "args": ["-m", "greeummcp.server", "--data-dir", "YOUR_DATA_DIR", "--transport", "stdio", "--server-name", "greeum_mcp"]
+  }
+}
+```
+
+#### Important Notes
+
+- **Server naming**: Always use underscores (`_`) instead of hyphens (`-`) in server names to avoid MCP compatibility issues.
+- **Data directory**: Use an absolute path for the data directory to ensure reliability.
 
 ### Verifying the Integration
 
