@@ -1,3 +1,20 @@
+Metadata-Version: 2.1
+Name: greeummcp
+Version: 0.1.0
+Summary: Greeum Memory Engine as MCP Server
+Home-page: https://github.com/GreeumAI/GreeumMCP
+Author: GreeumAI
+Author-email: contact@greeum.ai
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+
 # GreeumMCP
 
 GreeumMCP is a Model Context Protocol (MCP) server implementation for the Greeum Memory Engine. It enables seamless integration of Greeum's powerful memory capabilities with Large Language Models (LLMs) that support the MCP standard, such as Claude.

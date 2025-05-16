@@ -1,0 +1,6 @@
+greeum>=0.4.0      # Greeum core package
+mcp>=1.0.0         # MCP Python SDK
+fastapi>=0.100.0   # API server (HTTP transport)
+pydantic>=2.0.0    # Data validation
+uvicorn>=0.15.0    # ASGI server
+typer>=0.9.0       # CLI interface 

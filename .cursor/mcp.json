@@ -1,0 +1,6 @@
+{
+  "greeum_mcp": {
+    "command": "python",
+    "args": ["-m", "greeummcp.server", "--data-dir", "E:\\GreeumMCP\\data", "--transport", "stdio", "--server-name", "greeum_mcp"]
+  }
+} 
