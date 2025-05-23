@@ -6,7 +6,16 @@ from mcp.server.fastmcp import FastMCP
 from .adapters.greeum_adapter import GreeumAdapter
 from .tools.memory_tools import MemoryTools
 from .tools.utility_tools import UtilityTools
+from .resources.memory_resources import MemoryResources
 import asyncio
+import logging, sys
+
+logger = logging.getLogger("greeummcp")
+if not logger.handlers:
+    _h = logging.StreamHandler(sys.stdout)
+    _h.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s %(name)s - %(message)s'))
+    logger.addHandler(_h)
+    logger.setLevel(logging.INFO)
 
 class GreeumMCPServer:
     """
@@ -75,8 +84,15 @@ class GreeumMCPServer:
             self.data_dir
         )
 
+        # Prepare resources instance
+        self._memory_resources = MemoryResources(self.adapter)
+
         # Register MCP tools
         self._register_tools()
+        # Register MCP resources
+        self._register_resources()
+        
+        logger.info(f"GreeumMCPServer initialized (transport={self.transport})")
     
     def _register_tools(self):
         """Register all MCP tools from MemoryTools and UtilityTools dynamically."""
@@ -94,13 +110,31 @@ class GreeumMCPServer:
         _register_from(self._memory_tools)
         _register_from(self._utility_tools)
     
+    def _register_resources(self):
+        """Register MCP resources from MemoryResources."""
+        # Map resource method names to endpoint names
+        resource_mappings = {
+            "get_memory_block": "memory_block",
+            "get_memory_chain": "memory_chain",
+            "get_stm_list": "stm_list",
+            "get_server_config": "server_config",
+        }
+        for method_name, resource_name in resource_mappings.items():
+            fn = getattr(self._memory_resources, method_name, None)
+            if fn and callable(fn):
+                # FastMCP resource decorator expects bytes return
+                self.mcp.resource(name=resource_name)(fn)
+    
     def run(self):
         """Run the MCP server with the configured transport."""
         if self.transport == "stdio":
+            logger.info("Starting server (stdio)")
             self.mcp.run(transport="stdio")
         elif self.transport == "http":
+            logger.info(f"Starting server (http) :{self.port}")
             self.mcp.run(transport="http", port=self.port)
         elif self.transport == "websocket":
+            logger.info(f"Starting server (websocket) :{self.port}")
             self.mcp.run(transport="websocket", port=self.port)
         else:
             raise ValueError(f"Unsupported transport: {self.transport}")
