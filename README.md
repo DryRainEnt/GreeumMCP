@@ -13,27 +13,130 @@ GreeumMCP is a Model Context Protocol (MCP) server implementation for the Greeum
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.10 or higher
-- Greeum 0.5.2 or higher
-- MCP Python SDK 1.0.0 or higher
-
-### Installation Methods
-
-#### From PyPI (Recommended)
+<details open>
+<summary>Linux / macOS (bash / zsh)</summary>
 
 ```bash
+# 1) 가상 환경(권장)
+python3 -m venv venv && source venv/bin/activate
+
+# 2) 최신 안정판 설치
+pip install greeummcp
+
+# 3) 개발 도구까지 설치하려면
+pip install "greeummcp[dev]"
+```
+
+</details>
+
+<details>
+<summary>Windows (PowerShell)</summary>
+
+```powershell
+# 1) 가상 환경(권장)
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# 2) 패키지 설치
 pip install greeummcp
 ```
 
-#### From Source
+</details>
+
+필수 조건
+- Python 3.10 이상
+- `greeum` v0.5.2 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
+- (선택) C/C++ Build Tools – 일부 확장 기능에서 필요할 수 있습니다.
+
+설치 확인
 
 ```bash
-git clone https://github.com/GreeumAI/GreeumMCP.git
-cd GreeumMCP
-pip install -e .
+greeummcp version
 ```
+
+위 명령이 버전 문자열(예: `0.2.0`)을 출력하면 설치가 완료된 것입니다.
+
+---
+### MCP 런처 설정 (mcp.json 예시)
+아래 JSON을 프로젝트 루트 혹은 IDE 설정 위치에 저장하세요.
+
+```json
+{
+  "greeum_mcp": {
+    "command": "greeummcp",
+    "args": [
+      "run",
+      "--data-dir", "/ABS/PATH/TO/DATA",
+      "--transport", "stdio",
+      "--server-name", "greeum_mcp"
+    ]
+  }
+}
+```
+
+---
+### Claude Desktop 연동
+1. 위 설치 절차 완료 후 아래 OS별 설정을 `claude_desktop_config.json`에 추가합니다.
+2. Claude Desktop 재시작 → 🔨 아이콘 클릭해 Tool 목록에 **greeum_mcp** 가 나타나는지 확인.
+
+<details>
+<summary>Windows</summary>
+
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp.exe",
+      "args": [
+        "run",
+        "--data-dir", "C:\\Users\\USERNAME\\greeum-data",
+        "--transport", "stdio"
+      ]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary>macOS / Linux</summary>
+
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp",
+      "args": [
+        "run",
+        "--data-dir", "/home/username/greeum-data",
+        "--transport", "stdio"
+      ]
+    }
+  }
+}
+```
+</details>
+
+---
+### Cursor IDE 연동
+프로젝트 루트에 `.cursor/mcp.json` 파일을 생성:
+
+```json
+{
+  "greeum_mcp": {
+    "command": "greeummcp",
+    "args": [
+      "run",
+      "--data-dir", "${workspaceFolder}/data",
+      "--transport", "stdio"
+    ]
+  }
+}
+```
+
+저장 후 Cursor를 재시작하면 MCP 툴이 자동으로 로드됩니다.
+
+---
 
 ## Quick Start
 
