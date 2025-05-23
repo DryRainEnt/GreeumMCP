@@ -16,7 +16,7 @@ GreeumMCP is a Model Context Protocol (MCP) server implementation for the Greeum
 ### Prerequisites
 
 - Python 3.10 or higher
-- Greeum 0.4.0 or higher
+- Greeum 0.5.2 or higher
 - MCP Python SDK 1.0.0 or higher
 
 ### Installation Methods

@@ -1,4 +1,3 @@
-
 # GreeumMCP 기반 명세서
 
 ## 1. 프로젝트 개요
@@ -41,7 +40,7 @@ GreeumMCP/
 ## 3. 의존성
 
 ```
-greeum>=0.4.0      # Greeum 코어 패키지
+greeum>=0.5.2      # Greeum 코어 패키지
 mcp-python>=1.0.0  # MCP Python SDK
 fastapi>=0.100.0   # API 서버 (HTTP 전송용)
 pydantic>=2.0.0    # 데이터 검증
