@@ -3,6 +3,10 @@ Greeum MCP Server Implementation
 """
 from typing import Dict, Any, Optional, List
 from mcp.server.fastmcp import FastMCP
+from .adapters.greeum_adapter import GreeumAdapter
+from .tools.memory_tools import MemoryTools
+from .tools.utility_tools import UtilityTools
+import asyncio
 
 class GreeumMCPServer:
     """
@@ -47,90 +51,48 @@ class GreeumMCPServer:
             description="Greeum Memory Engine - Memory management for LLMs"
         )
         
+        # Initialize Greeum adapter
+        self.adapter = GreeumAdapter(
+            data_dir=self.data_dir,
+            greeum_config=self.greeum_config
+        )
+
+        # Lazily initialize Greeum core components (BlockManager 등)
+        # Adapter 자체가 내부에서 initialize() 호출하도록 설계돼 있으므로 필요 시 자동 초기화됨.
+
+        # Prepare tools instances
+        self._memory_tools = MemoryTools(
+            self.adapter.block_manager,
+            self.adapter.stm_manager,
+            self.adapter.cache_manager,
+            self.adapter.temporal_reasoner
+        )
+        self._utility_tools = UtilityTools(
+            self.adapter.block_manager,
+            self.adapter.stm_manager,
+            self.adapter.cache_manager,
+            self.adapter.prompt_wrapper,
+            self.data_dir
+        )
+
         # Register MCP tools
         self._register_tools()
     
     def _register_tools(self):
-        """Register all MCP tools."""
-        @self.mcp.tool()
-        async def server_status() -> Dict[str, Any]:
-            """Get the server status.
-            
-            Returns:
-                Server status information
-            """
-            import time
-            import os
-            
-            return {
-                "server_name": self.server_name,
-                "data_directory": self.data_dir,
-                "transport": self.transport,
-                "status": "running"
-            }
-            
-        @self.mcp.tool()
-        async def add_memory(content: str, importance: float = 0.5) -> str:
-            """Add a new memory to the long-term storage.
-            
-            Args:
-                content: The content of the memory to store
-                importance: The importance of the memory (0.0-1.0)
-            
-            Returns:
-                Memory ID of the created memory
-            """
-            import os
-            import time
-            import json
-            import uuid
-            
-            memory_id = str(uuid.uuid4())
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            
-            memory = {
-                "id": memory_id,
-                "content": content,
-                "timestamp": timestamp,
-                "importance": importance
-            }
-            
-            # 간단한 파일 기반 저장
-            os.makedirs(self.data_dir, exist_ok=True)
-            with open(os.path.join(self.data_dir, f"{memory_id}.json"), "w") as f:
-                json.dump(memory, f)
-            
-            return memory_id
-            
-        @self.mcp.tool()
-        async def query_memory(query: str, limit: int = 5) -> List[Dict[str, Any]]:
-            """Search memories by query text.
-            
-            Args:
-                query: The search query
-                limit: Maximum number of results to return
-            
-            Returns:
-                List of matching memory blocks
-            """
-            import os
-            import json
-            import glob
-            
-            memories = []
-            
-            # 간단한 파일 기반 검색
-            memory_files = glob.glob(os.path.join(self.data_dir, "*.json"))
-            for memory_file in memory_files[:limit]:
-                try:
-                    with open(memory_file, "r") as f:
-                        memory = json.load(f)
-                        if query.lower() in memory.get("content", "").lower():
-                            memories.append(memory)
-                except Exception:
+        """Register all MCP tools from MemoryTools and UtilityTools dynamically."""
+
+        def _register_from(obj):
+            for attr_name in dir(obj):
+                if attr_name.startswith("_"):
                     continue
-            
-            return memories
+                fn = getattr(obj, attr_name)
+                if callable(fn) and asyncio.iscoroutinefunction(fn):
+                    # Use existing docstring for tool description if present
+                    self.mcp.tool(name=attr_name)(fn)
+
+        # Register tools from both utility classes
+        _register_from(self._memory_tools)
+        _register_from(self._utility_tools)
     
     def run(self):
         """Run the MCP server with the configured transport."""

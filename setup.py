@@ -38,7 +38,7 @@ setup(
     ],
     python_requires=">=3.10",
     install_requires=[
-        "greeum>=0.4.0",  # Greeum core package
+        "greeum>=0.5.2",  # Greeum core package
         "mcp>=1.0.0",     # MCP Python SDK
         "fastapi>=0.100.0",  # API server (HTTP transport)
         "pydantic>=2.0.0",  # Data validation
