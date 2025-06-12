@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp",
+      "args": ["E:\\GreeumMCP\\data"]
+    }
+  }
+}

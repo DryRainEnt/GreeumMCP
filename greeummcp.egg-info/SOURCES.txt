@@ -28,6 +28,5 @@ greeummcp/resources/memory_resources.py
 greeummcp/tools/__init__.py
 greeummcp/tools/memory_tools.py
 greeummcp/tools/utility_tools.py
-tests/__init__.py
 tests/test_memory_tools.py
 tests/test_stm_cleanup.py

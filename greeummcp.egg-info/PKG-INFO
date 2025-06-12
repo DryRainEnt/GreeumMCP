@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: greeummcp
-Version: 0.2.3
+Version: 0.2.4
 Summary: # GreeumMCP
 Home-page: https://github.com/GreeumAI/GreeumMCP
 Author: GreeumAI
@@ -23,7 +23,7 @@ Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: greeum>=0.6.0
+Requires-Dist: greeum>=0.6.1
 Requires-Dist: mcp>=1.0.0
 Requires-Dist: fastapi>=0.100.0
 Requires-Dist: pydantic>=2.0.0
@@ -85,7 +85,7 @@ pip install greeummcp
 
 필수 조건
 - Python 3.10 이상
-- `greeum` v0.6.0 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
+- `greeum` v0.6.1 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
 - (선택) C/C++ Build Tools – 일부 확장 기능에서 필요할 수 있습니다.
 
 설치 확인

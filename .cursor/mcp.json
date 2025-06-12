@@ -1,0 +1,6 @@
+{
+  "greeum_mcp": {
+    "command": "greeummcp",
+    "args": ["${workspaceFolder}/data"]
+  }
+}

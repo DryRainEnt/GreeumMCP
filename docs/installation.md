@@ -9,7 +9,29 @@ GreeumMCP는 Greeum Memory Engine을 MCP(Model Context Protocol) 서버로 제�
 
 ## 설치 방법
 
-### 1. PyPI에서 설치 (권장)
+### 1. 🚀 UV를 통한 빠른 설치 (가장 간단)
+
+<details open>
+<summary>UV 설치 및 실행</summary>
+
+```bash
+# UV 설치 (처음 한 번만)
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# GreeumMCP 실행 (설치 없이)
+uvx greeummcp
+
+# 또는 커스텀 데이터 디렉토리 지정
+uvx greeummcp /path/to/data
+```
+
+</details>
+
+### 2. PyPI에서 설치 (전통적인 방법)
 
 ```bash
 # GreeumMCP 설치
@@ -19,7 +41,7 @@ pip install greeummcp
 pip install "greeummcp[dev]"
 ```
 
-### 2. 소스 코드에서 설치
+### 3. 소스 코드에서 설치
 
 ```bash
 git clone https://github.com/GreeumAI/GreeumMCP.git
@@ -32,7 +54,7 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-### 3. 가상 환경 사용 (권장)
+### 4. 가상 환경 사용 (pip 설치 시 권장)
 
 <details>
 <summary>Windows</summary>
@@ -67,11 +89,13 @@ pip install greeummcp
 ## 설치 확인
 
 ```bash
-# 버전 확인
+# pip 설치 시
 greeummcp version
-
-# 사용 가능한 도구 목록 확인
 greeummcp list-tools
+
+# UV 사용 시
+uvx greeummcp version
+uvx greeummcp list-tools
 ```
 
 ## 빠른 시작
@@ -79,17 +103,49 @@ greeummcp list-tools
 ### 1. 기본 실행
 
 ```bash
-# 기본 설정으로 실행 (stdio transport, ./data 디렉토리)
-greeummcp
+# pip 설치 후 실행
+greeummcp                    # 기본 설정 (./data 디렉토리)
+greeummcp /path/to/data      # 커스텀 디렉토리
+greeummcp --transport http --port 8000  # HTTP transport
 
-# 커스텀 데이터 디렉토리 지정
-greeummcp /path/to/data
-
-# HTTP transport 사용
-greeummcp --transport http --port 8000
+# UV 사용 시 (설치 불필요)
+uvx greeummcp                # 기본 설정
+uvx greeummcp /path/to/data  # 커스텀 디렉토리
+uvx greeummcp --transport http --port 8000  # HTTP transport
 ```
 
 ### 2. Claude Desktop 통합
+
+#### 🌟 방법 1: UV 사용 (가장 간단)
+
+<details open>
+<summary>모든 OS 공통</summary>
+
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "uvx",
+      "args": ["greeummcp"]
+    }
+  }
+}
+```
+
+커스텀 데이터 디렉토리 사용:
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "uvx",
+      "args": ["greeummcp", "/path/to/data"]
+    }
+  }
+}
+```
+</details>
+
+#### 📦 방법 2: pip 설치 후 사용
 
 <details>
 <summary>Windows</summary>
@@ -153,6 +209,23 @@ greeummcp --transport http --port 8000
 ### 3. Cursor IDE 통합
 
 프로젝트 루트에 `.cursor/mcp.json` 생성:
+
+<details open>
+<summary>UV 사용 (권장)</summary>
+
+```json
+{
+  "greeum_mcp": {
+    "command": "uvx",
+    "args": ["greeummcp", "${workspaceFolder}/data"]
+  }
+}
+```
+</details>
+
+<details>
+<summary>pip 설치 후</summary>
+
 ```json
 {
   "greeum_mcp": {
@@ -161,6 +234,7 @@ greeummcp --transport http --port 8000
   }
 }
 ```
+</details>
 
 ## 고급 설정
 

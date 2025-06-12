@@ -13,7 +13,28 @@ GreeumMCP is a Model Context Protocol (MCP) server implementation for the Greeum
 
 ## Installation
 
+### 🚀 빠른 설치 (UV 사용 - 권장)
+
 <details open>
+<summary>설치 없이 바로 실행 (uvx)</summary>
+
+```bash
+# UV 설치 (처음 한 번만)
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# GreeumMCP 실행 (설치 없이)
+uvx greeummcp
+```
+
+</details>
+
+### 📦 일반 설치 (pip)
+
+<details>
 <summary>Linux / macOS (bash / zsh)</summary>
 
 ```bash
@@ -43,18 +64,22 @@ pip install greeummcp
 
 </details>
 
-필수 조건
+### 📋 필수 조건
 - Python 3.10 이상
 - `greeum` v0.6.1 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
 - (선택) C/C++ Build Tools – 일부 확장 기능에서 필요할 수 있습니다.
 
-설치 확인
+### ✅ 설치 확인
 
 ```bash
+# pip 설치 시
 greeummcp version
+
+# uvx 사용 시
+uvx greeummcp version
 ```
 
-위 명령이 버전 문자열(예: `0.2.0`)을 출력하면 설치가 완료된 것입니다.
+위 명령이 버전 문자열(예: `0.2.4`)을 출력하면 설치가 완료된 것입니다.
 
 ---
 ### 빠른 시작
@@ -72,8 +97,38 @@ greeummcp --transport http --port 8000
 
 ---
 ### Claude Desktop 연동
-1. 위 설치 절차 완료 후 아래 OS별 설정을 `claude_desktop_config.json`에 추가합니다.
-2. Claude Desktop 재시작 → 🔨 아이콘 클릭해 Tool 목록에 **greeum_mcp** 가 나타나는지 확인.
+
+#### 🌟 방법 1: UV 사용 (가장 간단)
+
+<details open>
+<summary>모든 OS 공통</summary>
+
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "uvx",
+      "args": ["greeummcp"]
+    }
+  }
+}
+```
+
+커스텀 데이터 디렉토리 지정:
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "uvx",
+      "args": ["greeummcp", "/path/to/data"]
+    }
+  }
+}
+```
+
+</details>
+
+#### 📦 방법 2: pip 설치 후 사용
 
 <details>
 <summary>Windows</summary>
@@ -126,6 +181,9 @@ greeummcp --transport http --port 8000
 }
 ```
 </details>
+
+1. 위 설정을 `claude_desktop_config.json`에 추가합니다.
+2. Claude Desktop 재시작 → 🔨 아이콘 클릭해 Tool 목록에 **greeum_mcp** 가 나타나는지 확인.
 
 ---
 ### Cursor IDE 연동
