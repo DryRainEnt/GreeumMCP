@@ -45,7 +45,7 @@ pip install greeummcp
 
 필수 조건
 - Python 3.10 이상
-- `greeum` v0.5.2 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
+- `greeum` v0.6.1 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
 - (선택) C/C++ Build Tools – 일부 확장 기능에서 필요할 수 있습니다.
 
 설치 확인
@@ -57,21 +57,17 @@ greeummcp version
 위 명령이 버전 문자열(예: `0.2.0`)을 출력하면 설치가 완료된 것입니다.
 
 ---
-### MCP 런처 설정 (mcp.json 예시)
-아래 JSON을 프로젝트 루트 혹은 IDE 설정 위치에 저장하세요.
+### 빠른 시작
 
-```json
-{
-  "greeum_mcp": {
-    "command": "greeummcp",
-    "args": [
-      "run",
-      "--data-dir", "/ABS/PATH/TO/DATA",
-      "--transport", "stdio",
-      "--server-name", "greeum_mcp"
-    ]
-  }
-}
+```bash
+# 기본 실행 (data 디렉토리는 ./data 사용)
+greeummcp
+
+# 커스텀 데이터 디렉토리 지정
+greeummcp /path/to/data
+
+# HTTP transport 사용
+greeummcp --transport http --port 8000
 ```
 
 ---
@@ -87,11 +83,18 @@ greeummcp version
   "mcpServers": {
     "greeum_mcp": {
       "command": "greeummcp.exe",
-      "args": [
-        "run",
-        "--data-dir", "C:\\Users\\USERNAME\\greeum-data",
-        "--transport", "stdio"
-      ]
+      "args": ["C:\\Users\\USERNAME\\greeum-data"]
+    }
+  }
+}
+```
+
+기본 설정 (./data 사용):
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp.exe"
     }
   }
 }
@@ -106,11 +109,18 @@ greeummcp version
   "mcpServers": {
     "greeum_mcp": {
       "command": "greeummcp",
-      "args": [
-        "run",
-        "--data-dir", "/home/username/greeum-data",
-        "--transport", "stdio"
-      ]
+      "args": ["/home/username/greeum-data"]
+    }
+  }
+}
+```
+
+기본 설정 (./data 사용):
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp"
     }
   }
 }
@@ -125,11 +135,7 @@ greeummcp version
 {
   "greeum_mcp": {
     "command": "greeummcp",
-    "args": [
-      "run",
-      "--data-dir", "${workspaceFolder}/data",
-      "--transport", "stdio"
-    ]
+    "args": ["${workspaceFolder}/data"]
   }
 }
 ```
@@ -145,11 +151,17 @@ greeummcp version
 GreeumMCP can be run directly from the command line:
 
 ```bash
-# Using stdio transport (default)
-greeum_mcp --data-dir ./data --transport stdio
+# Run with default settings (stdio transport, ./data directory)
+greeummcp
+
+# Specify custom data directory
+greeummcp /path/to/data
 
 # Using HTTP transport
-greeum_mcp --data-dir ./data --transport http --port 8000
+greeummcp --transport http --port 8000
+
+# Legacy command (still supported)
+greeum_mcp --data-dir ./data --transport stdio
 ```
 
 ### Using as a Python Library

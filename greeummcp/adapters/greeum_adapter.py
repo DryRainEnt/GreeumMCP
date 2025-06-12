@@ -7,6 +7,10 @@ and MCP server components.
 from typing import Dict, List, Any, Optional, Union
 import os
 import time
+from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GreeumAdapter:
     """
@@ -24,9 +28,12 @@ class GreeumAdapter:
             data_dir: Directory to store memory data
             greeum_config: Additional configuration for Greeum components
         """
-        self.data_dir = data_dir
+        # Convert to absolute path to avoid issues across different hosts
+        self.data_dir = str(Path(data_dir).absolute())
         self.config = greeum_config or {}
         self._initialized = False
+        
+        logger.info(f"GreeumAdapter initialized with data_dir: {self.data_dir}")
         
         # Initialize components on first use to avoid import issues
         self._block_manager = None
@@ -40,33 +47,57 @@ class GreeumAdapter:
         if self._initialized:
             return
         
-        os.makedirs(self.data_dir, exist_ok=True)
+        logger.info("Initializing Greeum components...")
         
-        from memory_engine.block_manager import BlockManager
-        from memory_engine.stm_manager import STMManager
-        from memory_engine.cache_manager import CacheManager
-        from memory_engine.prompt_wrapper import PromptWrapper
-        from memory_engine.temporal_reasoner import TemporalReasoner
+        try:
+            os.makedirs(self.data_dir, exist_ok=True)
+            logger.debug(f"Created/verified data directory: {self.data_dir}")
+        except PermissionError as e:
+            logger.error(f"Permission denied creating directory: {self.data_dir}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to create data directory: {e}")
+            raise
         
-        # Initialize with custom embedding model if provided
-        embedding_model = self.config.get("embedding_model", None)
+        try:
+            from greeum.database_manager import DatabaseManager
+            from greeum.block_manager import BlockManager
+            from greeum.stm_manager import STMManager
+            from greeum.cache_manager import CacheManager
+            from greeum.prompt_wrapper import PromptWrapper
+            from greeum.temporal_reasoner import TemporalReasoner
+        except ImportError as e:
+            logger.error(f"Failed to import Greeum components: {e}")
+            logger.error("Please ensure Greeum is installed: pip install greeum>=0.6.0")
+            raise ImportError(
+                f"Greeum package not found or incorrectly installed. "
+                f"Please install with: pip install greeum>=0.6.0\n"
+                f"Error details: {e}"
+            )
+        
+        # Initialize database manager
+        db_path = os.path.join(self.data_dir, 'memory.db')
+        self._db_manager = DatabaseManager(connection_string=db_path)
         
         # Initialize core components
         self._block_manager = BlockManager(
-            data_dir=self.data_dir,
-            embedding_model=embedding_model
+            db_manager=self._db_manager,
+            use_faiss=self.config.get("use_faiss", True)
         )
         
+        # STMManager expects ttl parameter (single value, not multiple)
+        ttl = self.config.get("ttl_short", 3600)  # Use short TTL as default
         self._stm_manager = STMManager(
-            data_dir=self.data_dir,
-            ttl_short=self.config.get("ttl_short", 3600),
-            ttl_medium=self.config.get("ttl_medium", 86400),
-            ttl_long=self.config.get("ttl_long", 604800)
+            db_manager=self._db_manager,
+            ttl=ttl
         )
         
+        # CacheManager initialization
+        cache_path = os.path.join(self.data_dir, 'context_cache.json')
         self._cache_manager = CacheManager(
+            data_path=cache_path,
             block_manager=self._block_manager,
-            capacity=self.config.get("cache_capacity", 10)
+            stm_manager=self._stm_manager
         )
         
         self._prompt_wrapper = PromptWrapper(
@@ -79,11 +110,12 @@ class GreeumAdapter:
             self._prompt_wrapper.set_template(self.config["prompt_template"])
         
         self._temporal_reasoner = TemporalReasoner(
-            db_manager=self._block_manager,
+            db_manager=self._db_manager,
             default_language=self.config.get("default_language", "auto")
         )
         
         self._initialized = True
+        logger.info("Greeum components initialized successfully")
     
     @property
     def block_manager(self):

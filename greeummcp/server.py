@@ -17,6 +17,51 @@ if not logger.handlers:
     logger.addHandler(_h)
     logger.setLevel(logging.INFO)
 
+def check_dependencies():
+    """Check if all required dependencies are installed with correct versions."""
+    import importlib
+    import sys
+    
+    errors = []
+    
+    # Check Greeum
+    try:
+        import greeum
+        logger.info(f"✓ Greeum version: {greeum.__version__}")
+    except ImportError:
+        errors.append("Greeum package not found. Please install with: pip install greeum>=0.6.0")
+    
+    # Check MCP
+    try:
+        import mcp
+        # MCP package doesn't have __version__ attribute
+        logger.info("✓ MCP package: installed")
+    except ImportError:
+        errors.append("MCP package not found. Please install with: pip install mcp>=1.0.0")
+    
+    # Check FastAPI (for HTTP transport)
+    try:
+        import fastapi
+        logger.info(f"✓ FastAPI version: {fastapi.__version__}")
+    except ImportError:
+        logger.warning("FastAPI not found. HTTP transport will not be available.")
+    
+    # Check Uvicorn (for HTTP transport)
+    try:
+        import uvicorn
+        logger.info(f"✓ Uvicorn version: {uvicorn.__version__}")
+    except ImportError:
+        logger.warning("Uvicorn not found. HTTP transport will not be available.")
+    
+    if errors:
+        logger.error("Dependency check failed:")
+        for error in errors:
+            logger.error(f"  - {error}")
+        sys.exit(1)
+    
+    logger.info("All required dependencies are installed.")
+    return True
+
 class GreeumMCPServer:
     """
     GreeumMCP main server class that wraps Greeum memory engine with Model Context Protocol.
@@ -150,8 +195,15 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Port for HTTP/WS transport")
     parser.add_argument("--transport", default="stdio", choices=["stdio", "http", "websocket"], 
                         help="Transport type")
+    parser.add_argument("--skip-dependency-check", action="store_true", 
+                        help="Skip dependency version check")
     
     args = parser.parse_args()
+    
+    # Check dependencies unless explicitly skipped
+    if not args.skip_dependency_check:
+        logger.info("Checking dependencies...")
+        check_dependencies()
     
     server = GreeumMCPServer(
         data_dir=args.data_dir,

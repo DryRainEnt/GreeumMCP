@@ -1,19 +1,42 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: greeummcp
-Version: 0.1.0
-Summary: Greeum Memory Engine as MCP Server
+Version: 0.2.3
+Summary: # GreeumMCP
 Home-page: https://github.com/GreeumAI/GreeumMCP
 Author: GreeumAI
-Author-email: contact@greeum.ai
+Author-email: GreeumAI <contact@greeum.ai>
+License: MIT
+Project-URL: Homepage, https://github.com/GreeumAI/GreeumMCP
+Project-URL: Documentation, https://github.com/GreeumAI/GreeumMCP/tree/main/docs
+Project-URL: Repository, https://github.com/GreeumAI/GreeumMCP
+Project-URL: Issues, https://github.com/GreeumAI/GreeumMCP/issues
+Keywords: mcp,model-context-protocol,memory,ai,llm,greeum
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: greeum>=0.6.0
+Requires-Dist: mcp>=1.0.0
+Requires-Dist: fastapi>=0.100.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: uvicorn>=0.15.0
+Requires-Dist: typer>=0.9.0
 Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
 
 # GreeumMCP
 
@@ -30,27 +53,136 @@ GreeumMCP is a Model Context Protocol (MCP) server implementation for the Greeum
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.10 or higher
-- Greeum 0.4.0 or higher
-- MCP Python SDK 1.0.0 or higher
-
-### Installation Methods
-
-#### From PyPI (Recommended)
+<details open>
+<summary>Linux / macOS (bash / zsh)</summary>
 
 ```bash
+# 1) 가상 환경(권장)
+python3 -m venv venv && source venv/bin/activate
+
+# 2) 최신 안정판 설치
+pip install greeummcp
+
+# 3) 개발 도구까지 설치하려면
+pip install "greeummcp[dev]"
+```
+
+</details>
+
+<details>
+<summary>Windows (PowerShell)</summary>
+
+```powershell
+# 1) 가상 환경(권장)
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# 2) 패키지 설치
 pip install greeummcp
 ```
 
-#### From Source
+</details>
+
+필수 조건
+- Python 3.10 이상
+- `greeum` v0.6.0 이상은 greeummcp가 자동으로 의존성으로 설치합니다.
+- (선택) C/C++ Build Tools – 일부 확장 기능에서 필요할 수 있습니다.
+
+설치 확인
 
 ```bash
-git clone https://github.com/GreeumAI/GreeumMCP.git
-cd GreeumMCP
-pip install -e .
+greeummcp version
 ```
+
+위 명령이 버전 문자열(예: `0.2.0`)을 출력하면 설치가 완료된 것입니다.
+
+---
+### 빠른 시작
+
+```bash
+# 기본 실행 (data 디렉토리는 ./data 사용)
+greeummcp
+
+# 커스텀 데이터 디렉토리 지정
+greeummcp /path/to/data
+
+# HTTP transport 사용
+greeummcp --transport http --port 8000
+```
+
+---
+### Claude Desktop 연동
+1. 위 설치 절차 완료 후 아래 OS별 설정을 `claude_desktop_config.json`에 추가합니다.
+2. Claude Desktop 재시작 → 🔨 아이콘 클릭해 Tool 목록에 **greeum_mcp** 가 나타나는지 확인.
+
+<details>
+<summary>Windows</summary>
+
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp.exe",
+      "args": ["C:\\Users\\USERNAME\\greeum-data"]
+    }
+  }
+}
+```
+
+기본 설정 (./data 사용):
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp.exe"
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary>macOS / Linux</summary>
+
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp",
+      "args": ["/home/username/greeum-data"]
+    }
+  }
+}
+```
+
+기본 설정 (./data 사용):
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp"
+    }
+  }
+}
+```
+</details>
+
+---
+### Cursor IDE 연동
+프로젝트 루트에 `.cursor/mcp.json` 파일을 생성:
+
+```json
+{
+  "greeum_mcp": {
+    "command": "greeummcp",
+    "args": ["${workspaceFolder}/data"]
+  }
+}
+```
+
+저장 후 Cursor를 재시작하면 MCP 툴이 자동으로 로드됩니다.
+
+---
 
 ## Quick Start
 
@@ -59,11 +191,17 @@ pip install -e .
 GreeumMCP can be run directly from the command line:
 
 ```bash
-# Using stdio transport (default)
-greeummcp --data-dir ./data --transport stdio
+# Run with default settings (stdio transport, ./data directory)
+greeummcp
+
+# Specify custom data directory
+greeummcp /path/to/data
 
 # Using HTTP transport
-greeummcp --data-dir ./data --transport http --port 8000
+greeummcp --transport http --port 8000
+
+# Legacy command (still supported)
+greeum_mcp --data-dir ./data --transport stdio
 ```
 
 ### Using as a Python Library
@@ -77,7 +215,7 @@ run_server()
 # Run with custom settings
 run_server(
     data_dir="./data",
-    server_name="greeum",
+    server_name="greeum_mcp",
     port=8000,
     transport="http",
     greeum_config={
@@ -118,7 +256,7 @@ You can also manually configure Claude Desktop to use GreeumMCP by creating a JS
 ```json
 {
     "mcpServers": {
-        "greeum-mcp": {
+        "greeum_mcp": {
             "command": "python",
             "args": [
                 "-m", "greeummcp.server",
@@ -134,7 +272,7 @@ You can also manually configure Claude Desktop to use GreeumMCP by creating a JS
 ```json
 {
     "mcpServers": {
-        "greeum-mcp": {
+        "greeum_mcp": {
             "command": "python3",
             "args": [
                 "-m", "greeummcp.server",
@@ -149,6 +287,24 @@ You can also manually configure Claude Desktop to use GreeumMCP by creating a JS
 3. Make sure to replace `USERNAME` and adjust paths according to your system.
 4. Restart Claude Desktop to apply the changes.
 5. Verify that the tools are available by looking for the hammer icon in the Claude Desktop interface.
+
+### Cursor Integration
+
+To use GreeumMCP with Cursor, create a `.cursor/mcp.json` file in your project root:
+
+```json
+{
+  "greeum_mcp": {
+    "command": "python",
+    "args": ["-m", "greeummcp.server", "--data-dir", "YOUR_DATA_DIR", "--transport", "stdio", "--server-name", "greeum_mcp"]
+  }
+}
+```
+
+#### Important Notes
+
+- **Server naming**: Always use underscores (`_`) instead of hyphens (`-`) in server names to avoid MCP compatibility issues.
+- **Data directory**: Use an absolute path for the data directory to ensure reliability.
 
 ### Verifying the Integration
 

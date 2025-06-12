@@ -41,37 +41,48 @@ def get_absolute_package_path():
     """Get absolute path to the GreeumMCP package."""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-def create_config_file(data_dir, entry_script=None):
+def create_config_file(data_dir, use_simple_command=True):
     """Create Claude Desktop config file."""
     config_path = get_config_path()
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     
-    # Determine entry script path
-    if entry_script is None:
-        entry_script = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'greeummcp', 'server.py'))
+    # Try to detect if greeummcp is installed
+    try:
+        import subprocess
+        result = subprocess.run(['greeummcp', 'version'], capture_output=True, text=True)
+        greeummcp_installed = result.returncode == 0
+    except:
+        greeummcp_installed = False
     
-    # Get absolute package path
-    package_path = get_absolute_package_path()
-    
-    # Create config with appropriate command for the platform
-    if platform.system() == "Windows":
-        config = {
-            "mcpServers": {
-                "greeum_mcp": {
-                    "command": "python",
-                    "args": [
-                        entry_script,
-                        "--data-dir", data_dir,
-                        "--transport", "stdio"
-                    ]
+    # Create config with appropriate command
+    if greeummcp_installed and use_simple_command:
+        # Use simplified command when greeummcp is installed
+        if data_dir == "./data":
+            # Use default data directory
+            config = {
+                "mcpServers": {
+                    "greeum_mcp": {
+                        "command": "greeummcp.exe" if platform.system() == "Windows" else "greeummcp"
+                    }
                 }
             }
-        }
-    else:  # macOS or Linux
+        else:
+            # Use custom data directory
+            config = {
+                "mcpServers": {
+                    "greeum_mcp": {
+                        "command": "greeummcp.exe" if platform.system() == "Windows" else "greeummcp",
+                        "args": [data_dir]
+                    }
+                }
+            }
+    else:
+        # Fallback to Python script execution
+        entry_script = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'greeummcp', 'server.py'))
         config = {
             "mcpServers": {
                 "greeum_mcp": {
-                    "command": "python3",
+                    "command": "python" if platform.system() == "Windows" else "python3",
                     "args": [
                         entry_script,
                         "--data-dir", data_dir,
@@ -128,7 +139,7 @@ def main():
     # Create config file
     if args.create:
         try:
-            created_path = create_config_file(data_dir, args.entry_script)
+            created_path = create_config_file(data_dir)
             print_colored(f"Claude Desktop config file created at: {created_path}", "green")
             print_colored("Please restart Claude Desktop to apply the changes.", "cyan")
         except Exception as e:
@@ -137,24 +148,55 @@ def main():
     
     # Just print the configuration
     if args.print:
-        entry_script = args.entry_script
-        if entry_script is None:
-            entry_script = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'greeummcp', 'server.py'))
+        # Try to detect if greeummcp is installed
+        try:
+            import subprocess
+            result = subprocess.run(['greeummcp', 'version'], capture_output=True, text=True)
+            greeummcp_installed = result.returncode == 0
+        except:
+            greeummcp_installed = False
         
         print_colored("Configuration for Claude Desktop:", "cyan")
-        print(json.dumps({
-            "mcpServers": {
-                "greeum_mcp": {
-                    "command": "python" if platform.system() == "Windows" else "python3",
-                    "args": [
-                        entry_script,
-                        "--data-dir", data_dir,
-                        "--transport", "stdio"
-                    ]
+        
+        if greeummcp_installed:
+            # Show simplified config
+            if data_dir == "./data":
+                config = {
+                    "mcpServers": {
+                        "greeum_mcp": {
+                            "command": "greeummcp.exe" if platform.system() == "Windows" else "greeummcp"
+                        }
+                    }
+                }
+            else:
+                config = {
+                    "mcpServers": {
+                        "greeum_mcp": {
+                            "command": "greeummcp.exe" if platform.system() == "Windows" else "greeummcp",
+                            "args": [data_dir]
+                        }
+                    }
+                }
+        else:
+            # Show fallback config
+            entry_script = args.entry_script
+            if entry_script is None:
+                entry_script = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'greeummcp', 'server.py'))
+            
+            config = {
+                "mcpServers": {
+                    "greeum_mcp": {
+                        "command": "python" if platform.system() == "Windows" else "python3",
+                        "args": [
+                            entry_script,
+                            "--data-dir", data_dir,
+                            "--transport", "stdio"
+                        ]
+                    }
                 }
             }
-        }, indent=4))
         
+        print(json.dumps(config, indent=4))
         print_colored(f"\nConfig file path: {config_path}", "cyan")
         return
     

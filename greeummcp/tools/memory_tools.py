@@ -36,12 +36,12 @@ class MemoryTools:
         Returns:
             Memory ID of the created memory
         """
-        from memory_engine.text_utils import process_user_input
+        from greeum.text_utils import process_user_input
         
         processed = process_user_input(content)
         
         # Add to long-term memory
-        memory_id = self.block_manager.add_block(
+        block = self.block_manager.add_block(
             context=processed.get("context", content),
             keywords=processed.get("keywords", []),
             tags=processed.get("tags", []),
@@ -49,10 +49,20 @@ class MemoryTools:
             embedding=processed.get("embedding", None)
         )
         
-        # Also add to short-term memory with medium TTL
-        self.stm_manager.add_memory(content, ttl_type="medium")
+        if not block:
+            raise Exception("Failed to add memory block")
         
-        return str(memory_id)
+        # Also add to short-term memory
+        self.stm_manager.add_memory({
+            "content": content,
+            "metadata": {
+                "keywords": processed.get("keywords", []),
+                "importance": importance
+            }
+        })
+        
+        # Return the block index as the memory ID
+        return str(block.get("block_index", ""))
     
     async def query_memory(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
         """
@@ -65,23 +75,18 @@ class MemoryTools:
         Returns:
             List of matching memory blocks
         """
-        from memory_engine.text_utils import process_user_input, compute_embedding
+        from greeum.text_utils import process_user_input, generate_simple_embedding
         
         processed = process_user_input(query)
-        query_embedding = processed.get("embedding", compute_embedding(query))
+        query_embedding = processed.get("embedding", generate_simple_embedding(query))
         query_keywords = processed.get("keywords", [])
         
-        # Update cache with query
-        self.cache_manager.update_cache(
+        # Update cache and get relevant blocks
+        results = self.cache_manager.update_cache(
+            user_input=query,
             query_embedding=query_embedding,
-            query_keywords=query_keywords
-        )
-        
-        # Get relevant blocks through cache
-        results = self.cache_manager.get_relevant_blocks(
-            query_embedding=query_embedding,
-            query_keywords=query_keywords,
-            limit=limit
+            extracted_keywords=query_keywords,
+            top_k=limit
         )
         
         # Format results
@@ -107,38 +112,55 @@ class MemoryTools:
         Returns:
             Memory block data
         """
-        memory = self.block_manager.get_memory(memory_id)
-        if not memory:
-            return {"error": "Memory not found"}
-        
-        return {
-            "id": memory_id,
-            "content": memory.get("context", ""),
-            "timestamp": memory.get("timestamp", ""),
-            "keywords": memory.get("keywords", []),
-            "importance": memory.get("importance", 0.5)
-        }
+        try:
+            block_index = int(memory_id)
+            memory = self.block_manager.get_block_by_index(block_index)
+            if not memory:
+                return {"error": "Memory not found"}
+            
+            return {
+                "id": memory_id,
+                "content": memory.get("context", ""),
+                "timestamp": memory.get("timestamp", ""),
+                "keywords": memory.get("keywords", []),
+                "importance": memory.get("importance", 0.5)
+            }
+        except ValueError:
+            return {"error": "Invalid memory ID format"}
     
     async def update_memory(self, memory_id: str, content: str) -> Dict[str, Any]:
         """
         Update an existing memory.
         
+        Note: BlockManager uses blockchain-like storage, so memories cannot be updated.
+        This method will add a new memory with the updated content instead.
+        
         Args:
-            memory_id: The ID of the memory to update
+            memory_id: The ID of the memory to update (for reference)
             content: The new content for the memory
         
         Returns:
             Status of the update operation
         """
-        try:
-            self.block_manager.update_memory(memory_id, content)
-            return {"success": True, "message": "Memory updated successfully"}
-        except Exception as e:
-            return {"success": False, "message": str(e)}
+        # Since blockchain doesn't support updates, we add a new memory
+        # that references the old one
+        new_memory_id = await self.add_memory(
+            content=f"[Update of memory {memory_id}] {content}",
+            importance=0.7
+        )
+        return {
+            "success": True, 
+            "message": "New memory created as update",
+            "new_memory_id": new_memory_id,
+            "original_memory_id": memory_id
+        }
     
     async def delete_memory(self, memory_id: str) -> Dict[str, Any]:
         """
         Delete a memory by ID.
+        
+        Note: BlockManager uses blockchain-like storage, so memories cannot be deleted.
+        This method will add a deletion marker instead.
         
         Args:
             memory_id: The ID of the memory to delete
@@ -146,11 +168,17 @@ class MemoryTools:
         Returns:
             Status of the delete operation
         """
-        try:
-            self.block_manager.delete_memory(memory_id)
-            return {"success": True, "message": "Memory deleted successfully"}
-        except Exception as e:
-            return {"success": False, "message": str(e)}
+        # Since blockchain doesn't support deletion, we add a deletion marker
+        new_memory_id = await self.add_memory(
+            content=f"[DELETED: memory {memory_id}]",
+            importance=0.1
+        )
+        return {
+            "success": True,
+            "message": "Deletion marker created",
+            "deletion_marker_id": new_memory_id,
+            "deleted_memory_id": memory_id
+        }
     
     async def search_time(self, time_query: str, language: str = "auto") -> List[Dict[str, Any]]:
         """
@@ -192,10 +220,11 @@ class MemoryTools:
         Returns:
             List of short-term memories
         """
-        memories = self.stm_manager.get_memories(
-            limit=limit,
-            include_expired=include_expired
-        )
+        # Clean expired memories if not including them
+        if not include_expired:
+            self.stm_manager.clean_expired()
+        
+        memories = self.stm_manager.get_recent_memories(count=limit)
         
         # Format results
         formatted_results = []
@@ -220,11 +249,11 @@ class MemoryTools:
         Returns:
             Status of the forget operation
         """
-        try:
-            self.stm_manager.forget(memory_id)
-            return {"success": True, "message": "Short-term memory forgotten"}
-        except Exception as e:
-            return {"success": False, "message": str(e)}
+        # STMManager doesn't have a forget method, memories expire automatically
+        return {
+            "success": False, 
+            "message": "Short-term memories cannot be manually forgotten. They expire automatically based on TTL."
+        }
     
     async def cleanup_expired_memories(self) -> Dict[str, Any]:
         """
@@ -234,7 +263,7 @@ class MemoryTools:
             Number of memories cleaned up
         """
         try:
-            count = self.stm_manager.cleanup_expired()
+            count = self.stm_manager.clean_expired()
             return {"success": True, "count": count, "message": f"Cleaned up {count} expired memories"}
         except Exception as e:
             return {"success": False, "message": str(e)} 

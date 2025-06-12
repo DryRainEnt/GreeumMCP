@@ -1,6 +1,17 @@
+LICENSE
+MANIFEST.in
 README.md
+pyproject.toml
+requirements.txt
 setup.py
+docs/api-reference.md
+docs/developer_guide.md
+docs/installation.md
+docs/tutorials.md
+examples/claude_desktop.py
+examples/cli_example.py
 greeummcp/__init__.py
+greeummcp/cli.py
 greeummcp/server.py
 greeummcp.egg-info/PKG-INFO
 greeummcp.egg-info/SOURCES.txt
@@ -17,3 +28,6 @@ greeummcp/resources/memory_resources.py
 greeummcp/tools/__init__.py
 greeummcp/tools/memory_tools.py
 greeummcp/tools/utility_tools.py
+tests/__init__.py
+tests/test_memory_tools.py
+tests/test_stm_cleanup.py

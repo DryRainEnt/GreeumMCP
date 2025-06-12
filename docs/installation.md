@@ -1,175 +1,246 @@
-# Greeum 설치 및 시작하기
+# GreeumMCP 설치 가이드
 
-Greeum은 LLM 독립적인 기억 관리 시스템으로, 다양한 언어 모델과 통합하여 사용할 수 있습니다. 이 문서에서는 Greeum을 설치하고 기본 설정하는 방법을 설명합니다.
+GreeumMCP는 Greeum Memory Engine을 MCP(Model Context Protocol) 서버로 제공하여 Claude Desktop, Cursor IDE 등과 통합할 수 있게 해주는 패키지입니다.
 
 ## 필수 요구사항
 
-- Python 3.8 이상
+- Python 3.10 이상
 - pip (Python 패키지 관리자)
-- Git (선택사항, 저장소 복제용)
 
 ## 설치 방법
 
-### 1. PyPI에서 직접 설치 (권장)
+### 1. PyPI에서 설치 (권장)
 
 ```bash
-# 기본 설치
-pip install greeum
+# GreeumMCP 설치
+pip install greeummcp
 
-# MCP(Model Control Protocol) 기능 포함 설치
-pip install greeum[mcp]
-
-# 모든 기능 포함 설치
-pip install greeum[all]
+# 개발 도구 포함 설치
+pip install "greeummcp[dev]"
 ```
 
-### 2. 저장소에서 설치
+### 2. 소스 코드에서 설치
 
 ```bash
-git clone https://github.com/DryRainEnt/Greeum.git
-cd Greeum
-
-# 기본 설치
-pip install -r requirements.txt
+git clone https://github.com/GreeumAI/GreeumMCP.git
+cd GreeumMCP
 
 # 개발 모드로 설치
 pip install -e .
 
-# MCP 기능 포함 개발 모드 설치
-pip install -e ".[mcp]"
+# 또는 개발 도구 포함
+pip install -e ".[dev]"
 ```
 
-### 3. 가상 환경 설정 (선택사항이지만 권장)
+### 3. 가상 환경 사용 (권장)
 
-```bash
+<details>
+<summary>Windows</summary>
+
+```powershell
 # 가상 환경 생성
 python -m venv venv
 
-# 가상 환경 활성화 (Windows)
-venv\Scripts\activate
+# 가상 환경 활성화
+.\venv\Scripts\Activate.ps1
 
-# 가상 환경 활성화 (macOS/Linux)
+# GreeumMCP 설치
+pip install greeummcp
+```
+</details>
+
+<details>
+<summary>macOS / Linux</summary>
+
+```bash
+# 가상 환경 생성
+python3 -m venv venv
+
+# 가상 환경 활성화
 source venv/bin/activate
+
+# GreeumMCP 설치
+pip install greeummcp
+```
+</details>
+
+## 설치 확인
+
+```bash
+# 버전 확인
+greeummcp version
+
+# 사용 가능한 도구 목록 확인
+greeummcp list-tools
 ```
 
-## 기본 구성
+## 빠른 시작
 
-Greeum은 기본적으로 설정 없이도 바로 사용할 수 있지만, 몇 가지 설정을 통해 사용자 환경에 맞게 최적화할 수 있습니다.
+### 1. 기본 실행
 
-### 기본 설정 파일 생성
+```bash
+# 기본 설정으로 실행 (stdio transport, ./data 디렉토리)
+greeummcp
 
-프로젝트 루트 디렉토리에 `config.json` 파일을 생성하여 다음과 같이 설정할 수 있습니다:
+# 커스텀 데이터 디렉토리 지정
+greeummcp /path/to/data
 
+# HTTP transport 사용
+greeummcp --transport http --port 8000
+```
+
+### 2. Claude Desktop 통합
+
+<details>
+<summary>Windows</summary>
+
+`%APPDATA%\Claude\claude_desktop_config.json`:
 ```json
 {
-  "storage": {
-    "path": "./data/memory",
-    "format": "json"
-  },
-  "ttl": {
-    "short": 3600,    // 1시간 (초 단위)
-    "medium": 86400,  // 1일 (초 단위)
-    "long": 2592000   // 30일 (초 단위)
-  },
-  "embedding": {
-    "model": "default",
-    "dimension": 384
-  },
-  "language": {
-    "default": "auto",
-    "supported": ["ko", "en", "ja", "zh", "es"]
-  },
-  "mcp": {
-    "enabled": true,
-    "port": 8000,
-    "host": "0.0.0.0"
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp.exe",
+      "args": ["C:\\Users\\USERNAME\\greeum-data"]
+    }
   }
 }
 ```
 
-### 스토리지 디렉토리 준비
+기본 설정 사용 시:
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp.exe"
+    }
+  }
+}
+```
+</details>
 
-메모리 블록이 저장될 디렉토리를 생성합니다:
+<details>
+<summary>macOS</summary>
 
-```bash
-mkdir -p data/memory
+`~/Library/Application Support/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp",
+      "args": ["/Users/username/greeum-data"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary>Linux</summary>
+
+`~/.config/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "greeum_mcp": {
+      "command": "greeummcp",
+      "args": ["/home/username/greeum-data"]
+    }
+  }
+}
+```
+</details>
+
+### 3. Cursor IDE 통합
+
+프로젝트 루트에 `.cursor/mcp.json` 생성:
+```json
+{
+  "greeum_mcp": {
+    "command": "greeummcp",
+    "args": ["${workspaceFolder}/data"]
+  }
+}
 ```
 
-## MCP(Model Control Protocol) 설정
+## 고급 설정
 
-### MCP 서비스 실행
-
-Greeum v0.4.0부터는 MCP를 통해 다양한 외부 도구와 연동할 수 있습니다. MCP 서비스를 실행하려면:
+### 환경 변수
 
 ```bash
-# CLI 명령을 통한 MCP 서비스 실행
-greeum-mcp --port 8000 --data-dir ./data
+# 데이터 디렉토리 설정
+export GREEUM_DATA_DIR=/path/to/data
 
-# 또는 Python 모듈로 직접 실행
-python -m memory_engine.mcp_service --port 8000 --data-dir ./data
+# 로그 레벨 설정
+export GREEUM_LOG_LEVEL=INFO
 ```
 
-### 환경 변수 설정 (선택사항)
+### Python API 사용
 
-MCP 서비스의 보안을 위해 다음 환경 변수를 설정할 수 있습니다:
+```python
+from greeummcp import run_server
 
-```bash
-# Windows
-set ADMIN_KEY=your_secure_admin_key
+# 기본 설정으로 실행
+run_server()
 
-# macOS/Linux
-export ADMIN_KEY=your_secure_admin_key
+# 커스텀 설정
+run_server(
+    data_dir="./data",
+    transport="http",
+    port=8000,
+    greeum_config={
+        "ttl_short": 3600,     # 1시간
+        "ttl_medium": 86400,   # 1일
+        "ttl_long": 604800,    # 1주일
+        "default_language": "auto"
+    }
+)
 ```
-
-### API 키 생성
-
-MCP 서비스에 접근하려면 API 키가 필요합니다. 다음 방법으로 API 키를 생성할 수 있습니다:
-
-```bash
-# MCP 서비스가 실행 중인 상태에서 API 키 생성 요청
-curl -X POST "http://localhost:8000/api/mcp/admin/api_key" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "create", "admin_key": "your_secure_admin_key", "name": "My API Key"}'
-```
-
-또는 `examples/mcp_example.py` 스크립트를 사용할 수도 있습니다:
-
-```bash
-python examples/mcp_example.py --mode client
-```
-
-## 설치 검증
-
-Greeum이 올바르게 설치되었는지 확인하려면 다음 명령을 실행하세요:
-
-```bash
-python -c "from greeum import BlockManager; print('Greeum 설치 성공!')"
-
-# MCP 설치 확인
-python -c "from memory_engine.mcp_client import MCPClient; print('MCP 설치 성공!')"
-```
-
-설치가 성공적이면 "Greeum 설치 성공!" 또는 "MCP 설치 성공!" 메시지가 표시됩니다.
 
 ## 다음 단계
 
-- [API 레퍼런스](api-reference.md)를 참조하여 Greeum의 다양한 기능을 알아보세요.
-- [튜토리얼](tutorials.md)을 통해 Greeum의 기본 사용법을 배워보세요.
-- [MCP 예제](../examples/README.md)에서 MCP 사용 방법을 확인하세요.
+- [API 레퍼런스](api-reference.md)를 참조하여 MCP 도구들의 상세 기능을 알아보세요.
+- [튜토리얼](tutorials.md)을 통해 GreeumMCP의 기본 사용법을 배워보세요.
+- [예제 코드](../examples/)에서 실제 사용 방법을 확인하세요.
 
 ## 문제 해결
 
-**ImportError: No module named 'greeum'**
-- 가상 환경이 활성화되었는지 확인하세요.
-- `pip install -e .` 명령으로 개발 모드로 설치해 보세요.
+### ImportError: No module named 'greeum'
 
-**MCP 서비스 오류**
-- `pip install greeum[mcp]` 명령으로 MCP 관련 의존성이 설치되었는지 확인하세요.
-- 포트 충돌이 있는지 확인하고 필요하면 다른 포트를 사용하세요: `greeum-mcp --port 8080`
+```bash
+# Greeum 패키지가 설치되지 않은 경우
+pip install greeum>=0.6.1
 
-**권한 오류**
-- 데이터 디렉토리에 대한 쓰기 권한이 있는지 확인하세요.
+# 또는 GreeumMCP를 재설치
+pip install --upgrade greeummcp
+```
+
+### Command not found: greeummcp
+
+```bash
+# PATH에 추가되지 않은 경우
+python -m greeummcp.server
+
+# 또는 가상 환경 활성화 확인
+which greeummcp
+```
+
+### 포트 충돌 (HTTP transport)
+
+```bash
+# 다른 포트 사용
+greeummcp --transport http --port 8080
+```
+
+### 권한 오류
+
+```bash
+# 데이터 디렉토리 권한 확인
+chmod -R 755 ./data
+
+# 또는 다른 디렉토리 사용
+greeummcp ~/greeum-data
+```
 
 ## 지원
 
-문제가 계속되면 [이슈 트래커](https://github.com/DryRainEnt/Greeum/issues)에 문제를 보고하거나 이메일(playtart@play-t.art)로 문의하세요. 
+문제가 계속되면 [GitHub 이슈](https://github.com/GreeumAI/GreeumMCP/issues)에 보고해주세요.

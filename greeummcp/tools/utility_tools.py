@@ -61,7 +61,7 @@ class UtilityTools:
         Returns:
             List of extracted keywords
         """
-        from memory_engine.text_utils import extract_keywords as extract_kw
+        from greeum.text_utils import extract_keywords as extract_kw
         
         keywords = extract_kw(
             text,
@@ -82,7 +82,7 @@ class UtilityTools:
         Returns:
             List of extracted tags
         """
-        from memory_engine.text_utils import extract_tags as extract_t
+        from greeum.text_utils import extract_tags as extract_t
         
         tags = extract_t(
             text,
@@ -101,7 +101,7 @@ class UtilityTools:
         Returns:
             Embedding vector
         """
-        from memory_engine.text_utils import compute_embedding as compute_emb
+        from greeum.text_utils import generate_simple_embedding as compute_emb
         
         embedding = compute_emb(text)
         
@@ -117,7 +117,7 @@ class UtilityTools:
         Returns:
             Importance score (0.0-1.0)
         """
-        from memory_engine.text_utils import estimate_importance as estimate_imp
+        from greeum.text_utils import calculate_importance as estimate_imp
         
         importance = estimate_imp(text)
         
